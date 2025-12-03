@@ -1,18 +1,19 @@
 #include <iostream>
 #include <vector>
 #include <queue>
-#include <limits>
-#include <climits>  
+#include <limits.h>
 #include <string>
 #include <unordered_map>
+#include <algorithm>
 
 using namespace std;
 
 class Graph {
 private:
     int V;
-    vector<vector<pair<int, int>>> adj; 
+    vector< vector< pair<int, int> > > adj;
     vector<bool> flooded;
+
 public:
     Graph(int vertices) {
         V = vertices;
@@ -21,88 +22,63 @@ public:
     }
 
     void addEdge(int u, int v, int w) {
-        adj[u].push_back({v, w});
-        adj[v].push_back({u, w});
+        adj[u].push_back(make_pair(v, w));
+        adj[v].push_back(make_pair(u, w));
     }
 
     void markFlooded(int node) {
         flooded[node] = true;
     }
 
-    void simulateFloodBFS(int start) {
-        queue<int> q;
-        q.push(start);
-        flooded[start] = true;
-
-        while (!q.empty()) {
-            int u = q.front();
-            q.pop();
-            for (auto &edge : adj[u]) {
-                int v = edge.first;
-                if (!flooded[v]) {
-                    flooded[v] = true;
-                    q.push(v);
-                }
-            }
-        }
-    }
-
-    bool isSafe(int node) {
-        return !flooded[node];
+    void resetFlood() {
+        for (int i = 0; i < flooded.size(); i++)
+            flooded[i] = false;
     }
 
     void displayFloodStatus(const vector<string>& names) {
         cout << "\n--- FLOOD STATUS ---\n";
         for (int i = 0; i < V; i++) {
-            cout << names[i] << ": " << (flooded[i] ? "FLOODED" : "SAFE") << endl;
+            cout << names[i] << ": " 
+                 << (flooded[i] ? "FLOODED" : "SAFE") << endl;
         }
     }
 
-    void dijkstra(int start, int end, const vector<string>& names) {
+    int shortestDistance(int start, int end) {
         vector<int> dist(V, INT_MAX);
-        vector<int> prev(V, -1);
-        vector<bool> visited(V, false);
-        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+        priority_queue< pair<int,int>, vector< pair<int,int> >, greater< pair<int,int> > > pq;
 
         dist[start] = 0;
-        pq.push({0, start});
+        pq.push(make_pair(0, start));
 
         while (!pq.empty()) {
-            int u = pq.top().second;
+            pair<int,int> top = pq.top();
             pq.pop();
 
-            if (visited[u] || flooded[u]) continue;
-            visited[u] = true;
+            int d = top.first;
+            int u = top.second;
 
-            for (auto &edge : adj[u]) {
-                int v = edge.first;
-                int w = edge.second;
-                if (!visited[v] && !flooded[v] && dist[u] + w < dist[v]) {
+            if (u == end) return d;
+
+            for (int i = 0; i < adj[u].size(); i++) {
+                int v = adj[u][i].first;
+                int w = adj[u][i].second;
+
+                if (dist[u] + w < dist[v]) {
                     dist[v] = dist[u] + w;
-                    prev[v] = u;
-                    pq.push({dist[v], v});
+                    pq.push(make_pair(dist[v], v));
                 }
             }
         }
 
-        if (dist[end] == INT_MAX) {
-            cout << "\nNO SAFE PATH FOUND from " << names[start] << " to " << names[end] << ".\n";
-            return;
-        }
-
-        cout << "\nSAFE EVACUATION PATH FOUND!\nDistance: " << dist[end] << "\nPath: ";
-        vector<int> path;
-        for (int at = end; at != -1; at = prev[at])
-            path.push_back(at);
-
-        for (size_t i = path.size() - 1; i > 0; i--)
-            cout << names[path[i]] << " -> ";
-        cout << names[path[0]] << "\n";
+        return INT_MAX;
     }
+};
 
-    void resetFlood() {
-        fill(flooded.begin(), flooded.end(), false);
-    }
+struct EvacCenter {
+    int node;
+    int capacity;
+    int currentPeople;
+    string name;
 };
 
 int readInt(const string &prompt) {
@@ -110,23 +86,34 @@ int readInt(const string &prompt) {
     while (true) {
         cout << prompt;
         cin >> value;
+
         if (cin.fail()) {
             cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Invalid input. Please enter a valid integer.\n";
+            cin.ignore(99999, '\n');
+            cout << "Invalid input. Enter a number.\n";
         } else {
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.ignore(99999, '\n');
             return value;
         }
     }
 }
 
 int main() {
-    vector<string> names = {"Barangay A", "Barangay B", "Barangay C", "Barangay D",
-                            "Barangay E", "Barangay F", "Barangay G", "Barangay H"};
+
+    vector<string> names;
+    names.push_back("Barangay A");
+    names.push_back("Barangay B");
+    names.push_back("Barangay C");
+    names.push_back("Barangay D");
+    names.push_back("Barangay E");
+    names.push_back("Barangay F");
+    names.push_back("Barangay G");
+    names.push_back("Barangay H");
 
     unordered_map<string, int> nameToNode;
-    for (int i = 0; i < names.size(); i++) nameToNode[names[i]] = i;
+    for (int i = 0; i < names.size(); i++) {
+        nameToNode[names[i]] = i;
+    }
 
     Graph g(8);
 
@@ -138,14 +125,38 @@ int main() {
     g.addEdge(5, 6, 1);
     g.addEdge(6, 7, 7);
 
+    vector<EvacCenter> evacCenters;
+
+    EvacCenter e1;
+    e1.node = 3;
+    e1.capacity = 2;
+    e1.currentPeople = 0;
+    e1.name = "Evacuation Center 1 (Barangay D)";
+    evacCenters.push_back(e1);
+
+    EvacCenter e2;
+    e2.node = 5;
+    e2.capacity = 3;
+    e2.currentPeople = 0;
+    e2.name = "Evacuation Center 2 (Barangay F)";
+    evacCenters.push_back(e2);
+
+    EvacCenter e3;
+    e3.node = 7;
+    e3.capacity = 4;
+    e3.currentPeople = 0;
+    e3.name = "Evacuate Center 3 (Barangay H)";
+    evacCenters.push_back(e3);
+
     queue<string> alertQueue;
 
-    int choice;
+    int choice = 0;
+
     while (true) {
         cout << "\n===== FLOOD MONITORING SYSTEM =====\n";
         cout << "1. Mark flooded area\n";
-        cout << "2. View flood status\n"; 
-        cout << "3. Find evacuation route (Dijkstra)\n";
+        cout << "2. View flood status\n";
+        cout << "3. Evacuation recommendation\n";
         cout << "4. View emergency alerts\n";
         cout << "5. Clear alerts\n";
         cout << "6. Reset flood status\n";
@@ -157,59 +168,105 @@ int main() {
             string area;
             cout << "Enter area that is flooded: ";
             getline(cin, area);
+
             if (nameToNode.find(area) != nameToNode.end()) {
                 g.markFlooded(nameToNode[area]);
                 alertQueue.push(area + " is FLOODED.");
             } else {
                 cout << "Invalid area name.\n";
             }
+        }
 
-        } else if (choice == 2) {
+        else if (choice == 2) {
             g.displayFloodStatus(names);
+        }
 
-        } else if (choice == 3) {
-            string startArea, endArea;
-            cout << "Enter start area: ";
-            getline(cin, startArea);
-            cout << "Enter destination area: ";
-            getline(cin, endArea);
+        else if (choice == 3) {
+            string userArea;
+            cout << "Enter your barangay location: ";
+            getline(cin, userArea);
 
-            if (nameToNode.find(startArea) != nameToNode.end() &&
-                nameToNode.find(endArea) != nameToNode.end()) {
-                g.dijkstra(nameToNode[startArea], nameToNode[endArea], names);
-            } else {
+            if (nameToNode.find(userArea) == nameToNode.end()) {
                 cout << "Invalid area name.\n";
+                continue;
             }
 
-        } else if (choice == 4) {
+            int userNode = nameToNode[userArea];
+
+            vector< pair<int,int> > ranked; 
+            for (int i = 0; i < evacCenters.size(); i++) {
+                int d = g.shortestDistance(userNode, evacCenters[i].node);
+                ranked.push_back(make_pair(d, i));
+            }
+
+            sort(ranked.begin(), ranked.end());
+
+            cout << "\n=== RECOMMENDED EVACUATION CENTERS ===\n";
+
+            bool recommended = false;
+
+            for (int i = 0; i < ranked.size(); i++) {
+                int dist = ranked[i].first;
+                int idx = ranked[i].second;
+
+                EvacCenter &e = evacCenters[idx];
+
+                if (dist == INT_MAX) {
+                    cout << e.name << ": NO SAFE PATH\n";
+                    continue;
+                }
+
+                cout << e.name 
+                     << " | Distance: " << dist
+                     << " | Family Size: " << e.currentPeople 
+                     << "/" << e.capacity;
+
+                if (e.currentPeople < e.capacity) {
+                    cout << "  <-- Recommended!\n";
+                    e.currentPeople++;
+                    recommended = true;
+                    break;
+                } else {
+                    cout << "  (FULL)\n";
+                }
+            }
+
+            if (!recommended) {
+                cout << "\n⚠ ALL evacuation centers are FULL.\n";
+            }
+        }
+
+        else if (choice == 4) {
             cout << "\n--- EMERGENCY ALERTS ---\n";
             if (alertQueue.empty()) {
                 cout << "No alerts.\n";
             } else {
                 queue<string> temp = alertQueue;
                 while (!temp.empty()) {
-                    cout << "⚠️ " << temp.front() << "\n";
+                    cout << "⚠ " << temp.front() << endl;
                     temp.pop();
                 }
             }
+        }
 
-        } else if (choice == 5) {
+        else if (choice == 5) {
             while (!alertQueue.empty()) alertQueue.pop();
             cout << "Alerts cleared.\n";
+        }
 
-        } else if (choice == 6) {
+        else if (choice == 6) {
             g.resetFlood();
             cout << "Flood status reset.\n";
+        }
 
-        } else if (choice == 7) {
+        else if (choice == 7) {
             break;
+        }
 
-        } else {
+        else {
             cout << "Invalid choice.\n";
         }
     }
 
     return 0;
 }
-
-
