@@ -126,27 +126,12 @@ int main() {
     g.addEdge(6, 7, 7);
 
     vector<EvacCenter> evacCenters;
+        evacCenters.push_back({12, 5, 0, "Evacuation Center 1 (Barangay M)"});
+evacCenters.push_back({25, 5, 0, "Evacuation Center 2 (Barangay Z)"});
+evacCenters.push_back({31, 5, 0, "Evacuation Center 3 (Barangay AF)"});
 
-    EvacCenter e1;
-    e1.node = 3;
-    e1.capacity = 2;
-    e1.currentPeople = 0;
-    e1.name = "Evacuation Center 1 (Barangay D)";
-    evacCenters.push_back(e1);
-
-    EvacCenter e2;
-    e2.node = 5;
-    e2.capacity = 3;
-    e2.currentPeople = 0;
-    e2.name = "Evacuation Center 2 (Barangay F)";
-    evacCenters.push_back(e2);
-
-    EvacCenter e3;
-    e3.node = 7;
-    e3.capacity = 4;
-    e3.currentPeople = 0;
-    e3.name = "Evacuate Center 3 (Barangay H)";
-    evacCenters.push_back(e3);
+evacCenters.push_back({5, 4, 0, "Evacuation Center 4 (Barangay F)"});
+evacCenters.push_back({46, 4, 0, "Evacuation Center 5 (Barangay AT)"});
 
     queue<string> alertQueue;
 
