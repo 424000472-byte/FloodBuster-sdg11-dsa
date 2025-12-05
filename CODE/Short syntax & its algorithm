@@ -1,0 +1,28 @@
+//Linear Traversal Algorithm (O(n))
+void resetFlood() {
+        for (int i = 0; i < flooded.size(); i++)
+            flooded[i] = false;
+    }
+
+//Boolean Flag array
+void markFlooded(int node) {
+    flooded[node] = true;
+}
+
+//Linear Loop 
+void displayFloodStatus(const vector<string>& names)
+
+//Input-Validation loop
+int readInt(const string &prompt)
+
+//hash table lookup
+unordered_map<string, int> nameToNode;
+
+//Sorting Algorithm 
+sort(ranked.begin(), ranked.end());
+
+//Queue 
+queue<string> alertQueue;
+
+//also a Queue but clearing traversal
+while (!alertQueue.empty()) alertQueue.pop();
